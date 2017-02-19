@@ -130,7 +130,7 @@ def plot_3d(image, save_file, threshold=-300):
 
 
 # def process_file(file_path, patient, images_queue, plots_queue):
-def process_file(file_path, patient, images_queue):
+def process_file(file_path, patient):
     first_patient = load_scan(file_path + patient)
     first_patient_pixels = get_pixels_hu(first_patient)
     hu_in_mean_local = np.mean(first_patient_pixels)
@@ -143,11 +143,11 @@ def process_file(file_path, patient, images_queue):
     out_image = lungs_mask_fill * pix_resampled
     hu_out_image_mean_local = np.mean(out_image)
 
-    msg = (out_image, patient)
-    images_queue.put(msg)
+    # msg = (out_image, patient)
+    # images_queue.put(msg)
     # plots_queue.put(msg)
 
-    return hu_in_mean_local, hu_resample_image_mean_local, hu_out_image_mean_local
+    return hu_in_mean_local, hu_resample_image_mean_local, hu_out_image_mean_local, out_image, patient
 
 
 def images_listener(queue):
@@ -174,11 +174,11 @@ def plots_listener(queue):
 
 if __name__ == '__main__':
     manager = multiprocessing.Manager()
-    images_queue = manager.Queue()
+    #images_queue = manager.Queue()
     #plots_queue = manager.Queue()
 
     pool = multiprocessing.Pool(processes=multiprocessing.cpu_count() - 1)
-    images_watcher = pool.apply_async(images_listener, (images_queue,))
+    #images_watcher = pool.apply_async(images_listener, (images_queue,))
     #plots_watcher = pool.apply_async(plots_listener, (plots_queue,))
 
     patients = os.listdir(INPUT_FOLDER)
@@ -194,7 +194,7 @@ if __name__ == '__main__':
     start = time.time()
 
     # results = [pool.apply_async(process_file, args=(INPUT_FOLDER, p, images_queue, plots_queue)) for p in patients]
-    results = [pool.apply_async(process_file, args=(INPUT_FOLDER, p, images_queue)) for p in patients]
+    results = [pool.apply_async(process_file, args=(INPUT_FOLDER, p)) for p in patients]
 
     hu_in_mean = 0
     hu_resample_image_mean = 0
@@ -205,6 +205,7 @@ if __name__ == '__main__':
         hu_in_mean += res[0]
         hu_resample_image_mean += res[1]
         hu_out_image_mean += res[2]
+        np.save(OUTPUT_FOLDER + res[4], res[3])
 
     stop = time.time()
     pool.close()
