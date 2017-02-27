@@ -5,11 +5,10 @@ import scipy.ndimage
 import matplotlib.pyplot as plt
 from skimage import measure
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
-import time
 
 
-INPUT_FOLDER = '/Volumes/Files/git/kaggle-dataScienceBowl2017/data/sample_images/'
-OUTPUT_FOLDER = '/Volumes/Files/git/kaggle-dataScienceBowl2017/data/out-sample_images/'
+INPUT_FOLDER = '/Volumes/Files/git/kaggle-dataScienceBowl2017/data/stage1/'
+OUTPUT_FOLDER = '/Volumes/Files/git/kaggle-dataScienceBowl2017/data/out-stage1/'
 
 hu_in_mean = 0
 hu_resample_image_mean = 0
@@ -136,45 +135,48 @@ def plot_3d(image, save_file, threshold=-300):
 def process_file(patient):
     first_patient = load_scan(INPUT_FOLDER + patient)
     first_patient_pixels = get_pixels_hu(first_patient)
-    hu_in_mean_local = np.mean(first_patient_pixels)
+    # hu_in_mean_local = np.mean(first_patient_pixels)
 
     pix_resampled, _ = resample(first_patient_pixels, first_patient, [1, 1, 1])
-    hu_resample_image_mean_local = np.mean(pix_resampled)
+    # hu_resample_image_mean_local = np.mean(pix_resampled)
 
     lungs_mask_fill = segment_lung_mask(pix_resampled, True)
-
     out_image = lungs_mask_fill * pix_resampled
-    hu_out_image_mean_local = np.mean(out_image)
+    # hu_out_image_mean_local = np.mean(out_image)
 
     # plot_3d(out_image, OUTPUT_FOLDER + patient)
     np.save(OUTPUT_FOLDER + patient, out_image)
 
-    return hu_in_mean_local, hu_resample_image_mean_local, hu_out_image_mean_local
+    # return hu_in_mean_local, hu_resample_image_mean_local, hu_out_image_mean_local
 
 
 patients = os.listdir(INPUT_FOLDER)
 patients.sort()
 patients = [p for p in patients if not p.startswith(".")]
-patients = patients[:4]
 
 if not os.path.exists(OUTPUT_FOLDER):
     os.makedirs(OUTPUT_FOLDER)
 
-i = 1
+completed_patients = os.listdir(OUTPUT_FOLDER)
+completed_patients.sort()
+completed_patients = [p.split('.')[0] for p in completed_patients if not p.startswith(".")]
 
-start = time.time()
+i = 1
 print('PROCESSING', len(patients), 'IMAGES...')
 for p in patients:
-    hu_in_tmp, hu_resample_tmp, hu_out_tmp = process_file(p)
 
-    hu_in_mean += hu_in_tmp
-    hu_resample_image_mean += hu_resample_tmp
-    hu_out_image_mean += hu_out_tmp
+    # hu_in_tmp, hu_resample_tmp, hu_out_tmp = process_file(p)
+    if p not in completed_patients and p not in['b8bb02d229361a623a4dc57aa0e5c485']:
+        process_file(p)
+
+    # Calcular despues
+    # hu_in_mean += hu_in_tmp
+    # hu_resample_image_mean += hu_resample_tmp
+    # hu_out_image_mean += hu_out_tmp
 
     print(i, '-', round((i / len(patients)) * 100, 2), '% -', p)
     i += 1
 
-stop = time.time()
 
 hu_in_mean /= len(patients)
 hu_resample_image_mean /= len(patients)
@@ -182,4 +184,3 @@ hu_out_image_mean /= len(patients)
 
 print('HU in mean:', hu_in_mean, '\nHU resampled mean:', hu_resample_image_mean,
       '\nHU out mean:', hu_out_image_mean)
-print('Total time:', stop - start, 'Mean time:', (stop - start) / len(patients))
