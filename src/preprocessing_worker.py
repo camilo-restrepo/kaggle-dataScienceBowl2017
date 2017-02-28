@@ -134,20 +134,19 @@ def plot_3d(image, save_file, threshold=-300):
 
 def process_file(patient):
     # print('PROCESSING', patient)
-    #
-    # first_patient = load_scan(INPUT_FOLDER + patient)
-    # first_patient_pixels = get_pixels_hu(first_patient)
-    # hu_in_mean_local = np.mean(first_patient_pixels)
-    #
-    # pix_resampled = resample(first_patient_pixels, first_patient, [1, 1, 1])
-    # hu_resample_image_mean_local = np.mean(pix_resampled)
-    #
-    # lungs_mask_fill = segment_lung_mask(pix_resampled, True)
-    # out_image = lungs_mask_fill * pix_resampled
-    # hu_out_image_mean_local = np.mean(out_image)
-    #
-    # plot_3d(out_image, OUTPUT_FOLDER + patient)
-    # np.save(OUTPUT_FOLDER + patient, out_image)
+    first_patient = load_scan(INPUT_FOLDER + patient)
+    first_patient_pixels = get_pixels_hu(first_patient)
+    hu_in_mean_local = np.mean(first_patient_pixels)
 
-    hu_in_mean_local, hu_resample_image_mean_local, hu_out_image_mean_local = 0, 0, 0
+    pix_resampled = resample(first_patient_pixels, first_patient, [1, 1, 1])
+    hu_resample_image_mean_local = np.mean(pix_resampled)
+
+    lungs_mask_fill = segment_lung_mask(pix_resampled, True)
+    out_image = lungs_mask_fill * pix_resampled
+    hu_out_image_mean_local = np.mean(out_image)
+
+    plot_3d(out_image, OUTPUT_FOLDER + patient)
+    np.save(OUTPUT_FOLDER + patient, out_image)
+
+    # hu_in_mean_local, hu_resample_image_mean_local, hu_out_image_mean_local = 0, 0, 0
     return hu_in_mean_local, hu_resample_image_mean_local, hu_out_image_mean_local

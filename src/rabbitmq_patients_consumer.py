@@ -4,8 +4,7 @@ import json
 
 
 credentials = pika.PlainCredentials(username='user', password='Qwer1234!')
-parameters = pika.ConnectionParameters(host='192.168.0.7', credentials=credentials, heartbeat_interval=10)
-#parameters = pika.URLParameters('amqp://user:Qwer1234!@192.168.0.7:15672/socket_timeout=0&blocked_connection_timeout=0')
+parameters = pika.ConnectionParameters(host='192.168.0.7', credentials=credentials)
 connection = pika.BlockingConnection(parameters)
 channel = connection.channel()
 channel.queue_declare(queue='ds_images')
@@ -30,13 +29,14 @@ def send_error(patient):
 
 def callback(ch, method, properties, body):
     print("[x] Received %r" % body.decode("utf-8"))
-    ch.basic_ack(delivery_tag=method.delivery_tag)
+
     try:
         hu_in_mean, hu_resample_image_mean, hu_out_image_mean = process_file(body.decode("utf-8"))
         send_results(body.decode("utf-8"), hu_in_mean, hu_resample_image_mean, hu_out_image_mean)
     except Exception as e:
         send_error(body.decode("utf-8"))
         print(str(e))
+    ch.basic_ack(delivery_tag=method.delivery_tag)
 
 
 channel.basic_qos(prefetch_count=1)
